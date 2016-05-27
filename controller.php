@@ -30,8 +30,7 @@ class Controller extends Package {
     public function on_start() {
         Route::register('/files/{fID}/{keywords}', function ($fID, $keywords) {
             $file = \File::getByID($fID);
-            $image = \Core::make('html/image', array($file));
-            return $tag = $image->getTag();
+            return $file->getURL();
         });
     }
 }
