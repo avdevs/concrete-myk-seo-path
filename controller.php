@@ -22,8 +22,11 @@ class Controller extends Package {
     public function on_start() {
         Route::register('/files/{fID}/{keywords}', function ($fID, $keywords) {
             $file = \File::getByID($fID);
-            $fh = \Core::make('helper/file');
-            echo $fh->getContents($file->getURL());
+            if($file) {
+                $fh = \Core::make('helper/file');
+                header( 'Content-Type: '.$file->getMimeType());
+                echo $fh->getContents(DIR_FILES_UPLOADED_STANDARD . '/' . $file->getFileResource()->getPath());
+            }
         });
     }
 }
