@@ -24,8 +24,17 @@ class Controller extends Package {
             $file = \File::getByID($fID);
             if($file) {
                 $fh = \Core::make('helper/file');
-                header( 'Content-Type: '.$file->getMimeType());
-                echo $fh->getContents(DIR_FILES_UPLOADED_STANDARD . '/' . $file->getFileResource()->getPath());
+                $path = DIR_FILES_UPLOADED_STANDARD . '/' . $file->getFileResource()->getPath();
+                $headers = getallheaders();
+                if (isset($headers['If-Modified-Since']) && (strtotime($headers['If-Modified-Since']) == filemtime($path))) {
+                    header("HTTP/1.0 304 Not Modified");
+                    exit;
+                }
+                header( 'Content-Type: '.$file->getMimeType() );
+                header("Cache-Control: public");
+                header("Last-Modified: ". gmdate('D, d M Y H:i:s', filemtime($path)).' GMT');
+                header("Expires:" . date("r",time() + (60*60*24*30))); // Date in the past
+                echo $fh->getContents($path);
             }
         });
     }
