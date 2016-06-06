@@ -3,6 +3,8 @@ namespace Concrete\Package\MykSeoPath;
 use Package;
 use Route;
 use Request;
+use Concrete\Core\Http\FlysystemFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class Controller extends Package {
     protected $pkgHandle = 'myk_seo_path';
@@ -24,21 +26,24 @@ class Controller extends Package {
         Route::register('/files/{fID}/{keywords}', function ($fID, $keywords) {
             $file = \File::getByID($fID);
             if($file) {
-                $fh = \Core::make('helper/file');
-                $path = DIR_FILES_UPLOADED_STANDARD . '/' . $file->getFileResource()->getPath();
 
-                    $r = Request::getInstance();
+                $fre = $file->getFileResource();
+                $path = DIR_FILES_UPLOADED_STANDARD . '/' . $fre->getPath();
+                $r = Request::getInstance();
                 $ifModifiedSince = $r->headers->get('if-modified-since');
                 if(isset($ifModifiedSince) && (strtotime($ifModifiedSince) == filemtime($path))) {
                     header('HTTP/1.0 304 Not Modified');
                     exit;
                 }
-                header('Pragma: cache');
-                header('Content-Type: '.$file->getMimeType());
-                header('Cache-Control: cache');
-                header('Last-Modified: '. gmdate('D, d M Y H:i:s', filemtime($path)).' GMT');
-                header('Expires:' . date('D, d M Y H:i:s',time() + (60*60*24*30)).' GMT'); // Date in the past
-                echo $fh->getContents($path);
+                $fs = $file->getFile()->getFileStorageLocationObject()->getFileSystemObject();
+                $response = new FlysystemFileResponse($fre->getPath(), $fs);
+                $response->headers->set('Cache-Control','cache');
+                $response->headers->set('Last-Modified',gmdate('D, d M Y H:i:s', filemtime($path)).' GMT');
+                $response->headers->set('Expires',date('D, d M Y H:i:s',time() + (60*60*24*30)).' GMT');
+                $response->headers->set('Pragma','cache');
+                $response->prepare(\Request::getInstance());
+                return $response->send();
+
             }else{
                 header('HTTP/1.0 404 Not found');
                 exit;
