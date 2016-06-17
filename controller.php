@@ -49,5 +49,38 @@ class Controller extends Package {
                 exit;
             }
         });
+
+        /* For Thumbnail */
+        Route::register('/pictures/{fID}/{thumbnailHandle}/{keywords}', function ($fID, $thumbnailHandle, $keywords) {
+            $file = \File::getByID($fID);
+            if($file) {
+
+                $fre = $file->getFileResource();
+                $path = DIR_FILES_UPLOADED_STANDARD . '/thumbnails/' . $thumbnailHandle . '/' . $fre->getPath();
+                if(file_exists($path)) {
+
+                    $r = Request::getInstance();
+                    $ifModifiedSince = $r->headers->get('if-modified-since');
+                    if (isset($ifModifiedSince) && (strtotime($ifModifiedSince) == filemtime($path))) {
+                        header('HTTP/1.0 304 Not Modified');
+                        exit;
+                    }
+                    $fs = $file->getFile()->getFileStorageLocationObject()->getFileSystemObject();
+                    $response = new FlysystemFileResponse('/thumbnails/' . $thumbnailHandle . '/' . $fre->getPath(), $fs);
+                    $response->headers->set('Cache-Control', 'cache');
+                    $response->headers->set('Last-Modified', gmdate('D, d M Y H:i:s', filemtime($path)) . ' GMT');
+                    $response->headers->set('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 30)) . ' GMT');
+                    $response->headers->set('Pragma', 'cache');
+                    $response->prepare(\Request::getInstance());
+                    return $response->send();
+                } else {
+                    header('HTTP/1.0 404 Not found');
+                    exit;
+                }
+            }else{
+                header('HTTP/1.0 404 Not found');
+                exit;
+            }
+        });
     }
 }
