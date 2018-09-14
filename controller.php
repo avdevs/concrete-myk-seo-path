@@ -35,14 +35,13 @@ class Controller extends Package
 
     public function on_start()
     {
-
-        if (ob_get_length() > 0) {
-            ob_end_clean();
-        }
-
         Route::register('/files/{fID}/{keywords}', function ($fID, $keywords) {
             $file = \File::getByID($fID);
             if ($file) {
+
+                if (ob_get_length() > 0) {
+                    ob_end_clean();
+                }
 
                 $fre = $file->getFileResource();
                 $path = DIR_FILES_UPLOADED_STANDARD . '/' . $fre->getPath();
@@ -71,6 +70,10 @@ class Controller extends Package
         Route::register('/pictures/{fID}/{thumbnailHandle}/{keywords}', function ($fID, $thumbnailHandle, $keywords) {
             $file = \File::getByID($fID);
             if ($file) {
+
+                if (ob_get_length() > 0) {
+                    ob_end_clean();
+                }
 
                 $fre = $file->getFileResource();
                 $path = DIR_FILES_UPLOADED_STANDARD . '/thumbnails/' . $thumbnailHandle . '/' . $fre->getPath();
