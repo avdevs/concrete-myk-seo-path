@@ -36,13 +36,13 @@ class Controller extends Package
     public function on_start()
     {
         Route::register('/files/{fID}/{keywords}', function ($fID, $keywords) {
+
+            if (ob_get_length() > 0) {
+                ob_end_clean();
+            }
+
             $file = \File::getByID($fID);
             if ($file) {
-
-                if (ob_get_length() > 0) {
-                    ob_end_clean();
-                }
-
                 $fre = $file->getFileResource();
                 $path = DIR_FILES_UPLOADED_STANDARD . '/' . $fre->getPath();
                 $r = Request::getInstance();
@@ -68,13 +68,13 @@ class Controller extends Package
 
         /* For Thumbnail */
         Route::register('/pictures/{fID}/{thumbnailHandle}/{keywords}', function ($fID, $thumbnailHandle, $keywords) {
+
+            if (ob_get_length() > 0) {
+                ob_end_clean();
+            }
+
             $file = \File::getByID($fID);
             if ($file) {
-
-                if (ob_get_length() > 0) {
-                    ob_end_clean();
-                }
-
                 $fre = $file->getFileResource();
                 $path = DIR_FILES_UPLOADED_STANDARD . '/thumbnails/' . $thumbnailHandle . '/' . $fre->getPath();
                 if (file_exists($path)) {
